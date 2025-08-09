@@ -1,40 +1,32 @@
 version: '3.4'
-
 services:
   weaviate:
-    image: cr.weaviate.io/semitechnologies/weaviate:1.32.2
+    command:
+      - --host
+      - 0.0.0.0
+      - --port
+      - '8080'
+      - --scheme
+      - http
+    image: semitechnologies/weaviate:latest
     ports:
-      - "8080:8080"
-      - "50051:50051"
+      - 8080:8080
+    volumes:
+      - weaviate_data:/var/lib/weaviate
     restart: on-failure:0
     environment:
       QUERY_DEFAULTS_LIMIT: 25
-      AUTHENTICATION_APIKEY_ENABLED: 'true'
-      AUTHENTICATION_APIKEY_ALLOWED_KEYS: 'my-secret-key'
-      AUTHENTICATION_APIKEY_USERS: 'admin'
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
       PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
-      ENABLE_MODULES: 'text2vec-transformers,generative-openai'
-      ENABLE_API_BASED_MODULES: 'true'
+      DEFAULT_VECTORIZER_MODULE: 'text2vec-transformers'
+      ENABLE_MODULES: 'text2vec-transformers'
+      TRANSFORMERS_INFERENCE_API: 'http://t2v-transformers:8080'
       CLUSTER_HOSTNAME: 'node1'
-      TRANSFORMERS_INFERENCE_API: 'http://transformers:8080'
-      OPENAI_APIKEY: 'your-openai-api-key'
-    volumes:
-      - weaviate_data:/var/lib/weaviate
     depends_on:
-      - transformers
-
-  transformers:
-    image: cr.weaviate.io/semitechnologies/transformers-inference:latest
-    restart: on-failure:0
+      - t2v-transformers
+  t2v-transformers:
+    image: semitechnologies/transformers-inference:sentence-transformers-multi-qa-MiniLM-L6-cos-v1
     environment:
-      ENABLE_CUDA: 'false'  # Set to 'true' if using GPU
-    ports:
-      - "8081:8080"
-
+      ENABLE_CUDA: '0'
 volumes:
   weaviate_data:
-    driver: local
-    driver_opts:
-      type: none
-      device: /path/to/your/local/storage  # Change this to your desired local path
-      o: bind
