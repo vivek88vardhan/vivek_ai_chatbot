@@ -11,6 +11,7 @@ services:
     image: semitechnologies/weaviate:latest
     ports:
       - 8080:8080
+      - 50051:50051  # Add this line for gRPC
     volumes:
       - weaviate_data:/var/lib/weaviate
     restart: on-failure:0
